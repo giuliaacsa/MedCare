@@ -1,0 +1,1681 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedCare - Sistema de Lembretes de Medicamentos</title>
+    <style>
+        :root {
+            --pastel-yellow: #FFF9E6;
+            --pastel-pink: #FFE6F2;
+            --pastel-blue: #E6F3FF;
+            --pastel-purple: #F2E6FF;
+            --yellow-accent: #FFE066;
+            --pink-accent: #FF99CC;
+            --blue-accent: #66B3FF;
+            --purple-accent: #B399FF;
+            --text-dark: #2C3E50;
+            --text-light: #7F8C8D;
+            --success: #2ECC71;
+            --warning: #F39C12;
+            --danger: #E74C3C;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--pastel-yellow) 0%, var(--pastel-pink) 50%, var(--pastel-blue) 100%);
+            min-height: 100vh;
+            color: var(--text-dark);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: var(--purple-accent);
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        /* Navigation */
+        .nav-tabs {
+            display: flex;
+            background: white;
+            border-radius: 15px;
+            padding: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            gap: 5px;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .nav-tab.active {
+            background: var(--purple-accent);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .nav-tab:hover:not(.active) {
+            background: var(--pastel-purple);
+        }
+
+        /* Main Content Grid */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Calendar Section */
+        .calendar-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            min-height: 500px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .calendar-header h2 {
+            color: var(--text-dark);
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .calendar-nav button {
+            background: var(--pastel-blue);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+        }
+
+        .calendar-nav button:hover {
+            background: var(--blue-accent);
+            color: white;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            padding: 10px;
+            font-weight: 600;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            background: var(--pastel-purple);
+            border-radius: 8px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            min-height: 60px;
+            background: var(--pastel-yellow);
+            border: 2px solid transparent;
+        }
+
+        .calendar-day:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-color: var(--yellow-accent);
+        }
+
+        .calendar-day.today {
+            background: var(--purple-accent);
+            color: white;
+            font-weight: 700;
+            border-color: var(--purple-accent);
+        }
+
+        .calendar-day.has-medication {
+            background: var(--pastel-pink);
+            border-color: var(--pink-accent);
+        }
+
+        .med-dots {
+            display: flex;
+            gap: 2px;
+            margin-top: 2px;
+        }
+
+        .med-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--yellow-accent);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .widget {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .widget h3 {
+            color: var(--text-dark);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Today's Medications */
+        .med-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 12px;
+            background: var(--pastel-yellow);
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--yellow-accent);
+            
+        }
+
+        .med-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .med-info {
+            flex: 1;
+        }
+
+        .med-name {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 2px;
+            font-size: 0.95rem;
+        }
+
+        .med-time {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .med-status {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid var(--success);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: transparent;
+            position: relative;
+        }
+
+        .med-status.completed {
+            background: var(--success);
+            border-color: var(--success);
+            transform: scale(1.1);
+        }
+
+        .med-status.completed::after {
+            content: "✓";
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .med-status:hover {
+            transform: scale(1.1);
+        }
+
+        /* Progress Widget */
+        .progress-ring {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 15px;
+            position: relative;
+        }
+
+        .progress-circle {
+            fill: none;
+            stroke: var(--pastel-purple);
+            stroke-width: 8;
+            transform: rotate(-90deg);
+            transform-origin: center;
+            transition: all 0.5s ease-in-out;
+        }
+
+        .progress-circle.progress {
+            stroke: var(--purple-accent);
+            stroke-linecap: round;
+            stroke-dasharray: 314.16;
+            stroke-dashoffset: 314.16;
+        }
+
+        .progress-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .progress-text {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--purple-accent);
+            margin: 0;
+        }
+
+        .progress-subtext {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin: 0;
+        }
+
+        .progress-label {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-top: 10px;
+        }
+
+        /* Add Medication Button */
+        .add-btn {
+            background: linear-gradient(135deg, var(--pink-accent), var(--purple-accent));
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 15px 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal h2 {
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--pastel-purple);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--purple-accent);
+            box-shadow: 0 0 0 3px rgba(179, 153, 255, 0.1);
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn-cancel {
+            flex: 1;
+            padding: 12px;
+            background: var(--pastel-purple);
+            color: var(--text-dark);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-cancel:hover {
+            background: #e6e6e6;
+        }
+
+        .btn-save {
+            flex: 2;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--pink-accent), var(--purple-accent));
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        /* Medications Tab Styles */
+        .medications-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .med-card {
+            background: var(--pastel-yellow);
+            border-radius: 15px;
+            padding: 20px;
+            border-left: 4px solid var(--yellow-accent);
+            transition: all 0.3s ease;
+        }
+
+        .med-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .med-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .med-card-header h4 {
+            color: var(--text-dark);
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .med-status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .med-status-badge.active {
+            background: var(--success);
+            color: white;
+        }
+
+        .med-status-badge.inactive {
+            background: var(--warning);
+            color: white;
+        }
+
+        .med-card-body p {
+            margin: 8px 0;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+
+        .med-card-body strong {
+            color: var(--text-dark);
+        }
+
+        .med-card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .med-card-actions button {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            background: white;
+            color: var(--text-dark);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .med-card-actions button:hover {
+            background: var(--purple-accent);
+            color: white;
+        }
+
+        .med-card-actions button.delete-btn:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            z-index: 1001;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .notification.warning {
+            border-left: 4px solid var(--warning);
+        }
+
+        .notification.error {
+            border-left: 4px solid var(--danger);
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: block;
+        }
+
+        #medicationsSection {
+            display: none;
+        }
+
+        /* Layout específico para aba de medicamentos */
+#medicationsSection .main-content {
+    display: block;
+}
+
+#medicationsSection .sidebar {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+        /* Statistics */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: var(--pastel-blue);
+            border-radius: 10px;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--purple-accent);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .med-status.completed {
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+    #medicationsSection .sidebar {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    #medicationsSection .sidebar {
+        grid-template-columns: 1fr;
+    }
+}
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .sidebar {
+                order: -1;
+            }
+            
+            .progress-ring {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .progress-text {
+                font-size: 1.5rem;
+            }
+            
+            .medications-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .calendar-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .calendar-nav {
+                justify-content: center;
+            }
+            
+            .form-buttons {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .nav-tab {
+                padding: 10px 15px;
+                font-size: 0.8rem;
+            }
+            
+            .calendar-section {
+                padding: 20px;
+            }
+            
+            .widget {
+                padding: 20px;
+            }
+        }
+
+        /* Loading State */
+        .spinner {
+            border: 3px solid var(--pastel-purple);
+            border-top: 3px solid var(--purple-accent);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>💊 MedCare</h1>
+            <p>Sistema inteligente de lembrete de medicamentos</p>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-tab="calendar">📅 Calendário</button>
+            <button class="nav-tab" data-tab="medications">💊 Medicamentos</button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Calendar Section -->
+            <div id="calendarSection" class="tab-content">
+                <div class="calendar-section">
+                    <div class="calendar-header">
+                        <h2 id="currentMonth">Janeiro 2025</h2>
+                        <div class="calendar-nav">
+                            <button id="prevMonth">◀ Anterior</button>
+                            <button id="todayBtn">Hoje</button>
+                            <button id="nextMonth">Próximo ▶</button>
+                        </div>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- Calendar will be generated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Today's Medications Widget -->
+                <div class="widget">
+                    <h3>📋 Medicamentos de Hoje</h3>
+                    <div id="todayMedications">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+
+                <!-- Progress Widget -->
+                <div class="widget">
+                    <h3>📈 Progresso do Dia</h3>
+                    <div class="progress-ring">
+                        <svg width="120" height="120" viewBox="0 0 120 120">
+                            <circle class="progress-circle" cx="60" cy="60" r="50"></circle>
+                            <circle id="progressCircle" class="progress-circle progress" cx="60" cy="60" r="50"></circle>
+                        </svg>
+                        <div class="progress-overlay">
+                            <div id="progressText" class="progress-text">0%</div>
+                            <div id="progressSubtext" class="progress-subtext">de 0</div>
+                        </div>
+                    </div>
+                    <div class="progress-label">Medicamentos tomados hoje</div>
+                </div>
+
+                <!-- Statistics Widget -->
+                <div class="widget">
+                    <h3>📊 Estatísticas</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div id="total-medicamentos" class="stat-number">0</div>
+                            <div class="stat-label">Total</div>
+                        </div>
+                        <div class="stat-item">
+                            <div id="medicamentos-ativos" class="stat-number">0</div>
+                            <div class="stat-label">Ativos</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Medication Button -->
+                <button class="add-btn" onclick="app.abrirModal()">
+                    ➕ Adicionar Medicamento
+                </button>
+            </div>
+        </div>
+
+        <!-- Medications Section (Hidden by default) -->
+        <div id="medicationsSection" class="tab-content">
+            <div class="calendar-section">
+                <div class="calendar-header">
+                    <h2>💊 Meus Medicamentos</h2>
+                    <button class="add-btn" onclick="app.abrirModal()" style="width: auto; padding: 10px 20px;">
+                        ➕ Adicionar Novo
+                    </button>
+                </div>
+                <div class="medications-grid" id="medicationsGrid">
+                    <!-- Medications will be loaded by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Adding/Editing Medications -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">💊 Novo Medicamento</h2>
+            <form id="medicamentoForm">
+                <div class="form-group">
+                    <label for="nomeMedicamento">Nome do Medicamento *</label>
+                    <input type="text" id="nomeMedicamento" placeholder="Ex: Paracetamol 500mg" required>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label for="dosagemValor">Dosagem *</label>
+                        <input type="number" id="dosagemValor" step="0.01" placeholder="Ex: 500" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dosagemUnidade">Unidade *</label>
+                        <select id="dosagemUnidade" required>
+                            <option value="mg">mg</option>
+                            <option value="g">g</option>
+                            <option value="mL">mL</option>
+                            <option value="UI">UI</option>
+                            <option value="comprimido">comprimido(s)</option>
+                            <option value="cápsula">cápsula(s)</option>
+                            <option value="gota">gota(s)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="frequenciaDia">Frequência por Dia *</label>
+                    <select id="frequenciaDia" required>
+                        <option value="1">1 vez ao dia</option>
+                        <option value="2">2 vezes ao dia</option>
+                        <option value="3">3 vezes ao dia</option>
+                        <option value="4">4 vezes ao dia</option>
+                        <option value="6">6 vezes ao dia</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="horariosPersonalizados">Horários Personalizados</label>
+                    <input type="text" id="horariosPersonalizados" placeholder="Ex: 08:00,14:00,20:00">
+                    <small style="color: var(--text-light); font-size: 0.8rem;">Separe os horários por vírgula</small>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label for="dataInicio">Data Início *</label>
+                        <input type="date" id="dataInicio" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dataFim">Data Fim (opcional)</label>
+                        <input type="date" id="dataFim">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="observacoes">Observações</label>
+                    <textarea id="observacoes" rows="3" placeholder="Ex: Tomar após as refeições, evitar álcool..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="ativo" checked>
+                        <span>Medicamento ativo</span>
+                    </label>
+                </div>
+
+                <div class="form-buttons">
+                    <button type="button" class="btn-cancel" onclick="app.fecharModal()">Cancelar</button>
+                    <button type="submit" class="btn-save">💾 Salvar Medicamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <div id="notificationMessage"></div>
+    </div>
+
+    <script>
+        // JavaScript completo da aplicação MedCare
+        const API_BASE = '/api/medicamentos';
+
+        class MedCareApp {
+            constructor() {
+                this.medicamentos = [];
+                this.currentDate = new Date();
+                this.currentTab = 'calendar';
+                this.editingId = null;
+                
+                this.init();
+            }
+
+            async init() {
+                console.log('Iniciando MedCare App...');
+                await this.carregarMedicamentos();
+                this.renderCalendar();
+                this.renderTodayMedications();
+                this.updateProgress();
+                this.setupEventListeners();
+                this.showNotification('Sistema MedCare carregado com sucesso!', 'success');
+            }
+
+            async carregarMedicamentos() {
+                try {
+                    console.log('Carregando medicamentos da API...');
+                    const response = await fetch(API_BASE);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    
+                    const resultado = await response.json();
+                    console.log('Resposta da API:', resultado);
+                    
+                    if (resultado.status === 'sucesso') {
+                        this.medicamentos = resultado.dados || [];
+                        this.renderMedications();
+                        this.updateStatistics();
+                        console.log('Medicamentos carregados:', this.medicamentos.length);
+                    } else {
+                        throw new Error(resultado.mensagem || 'Erro ao carregar medicamentos');
+                    }
+                    
+                } catch (error) {
+                    console.error('Erro ao carregar medicamentos:', error);
+                    this.showNotification('Erro ao carregar medicamentos. Usando dados de demonstração.', 'warning');
+                    this.carregarDadosMock();
+                }
+            }
+
+            carregarDadosMock() {
+                console.log('Carregando dados mock...');
+                this.medicamentos = [
+                    {
+                        id: 1,
+                        nomeMedicamento: "Paracetamol",
+                        dosagemValor: 500.00,
+                        dosagemUnidade: "mg",
+                        frequenciaPorDia: 3,
+                        horariosPersonalizados: "08:00,14:00,20:00",
+                        dataInicio: "2025-01-10",
+                        dataFim: "2025-01-20",
+                        observacoes: "Tomar após refeições",
+                        ativo: true,
+                        criadoEm: "2025-01-01T10:00:00"
+                    },
+                    {
+                        id: 2,
+                        nomeMedicamento: "Omeprazol",
+                        dosagemValor: 20.00,
+                        dosagemUnidade: "mg",
+                        frequenciaPorDia: 1,
+                        horariosPersonalizados: "07:00",
+                        dataInicio: "2025-01-01",
+                        dataFim: "2025-12-31",
+                        observacoes: "Tomar em jejum",
+                        ativo: true,
+                        criadoEm: "2025-01-01T10:00:00"
+                    },
+                    {
+                        id: 3,
+                        nomeMedicamento: "Vitamina D",
+                        dosagemValor: 2000.00,
+                        dosagemUnidade: "UI",
+                        frequenciaPorDia: 1,
+                        horariosPersonalizados: "09:00",
+                        dataInicio: "2025-01-05",
+                        dataFim: "2025-06-05",
+                        observacoes: "Suplemento alimentar",
+                        ativo: true,
+                        criadoEm: "2025-01-01T10:00:00"
+                    }
+                ];
+                
+                this.renderMedications();
+                this.updateStatistics();
+                this.renderTodayMedications();
+                this.updateProgress();
+            }
+
+            async salvarMedicamento(formData) {
+    try {
+        const url = this.editingId ? `${API_BASE}/${this.editingId}` : API_BASE;
+        const method = this.editingId ? 'PUT' : 'POST';
+        
+        console.log('Enviando dados para API:', formData);
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || `HTTP error! status: ${response.status}`);
+        }
+        
+        const resultado = await response.json();
+        
+        if (resultado.status === 'sucesso') {
+            this.showNotification(resultado.mensagem || 'Medicamento salvo com sucesso!', 'success');
+            await this.carregarMedicamentos();
+            
+            // ATUALIZAÇÃO CRÍTICA: Renderiza os medicamentos de hoje imediatamente
+            this.renderTodayMedications();
+            
+            this.fecharModal();
+        } else {
+            throw new Error(resultado.mensagem || 'Erro ao salvar medicamento');
+        }
+        
+    } catch (error) {
+        console.error('Erro ao salvar medicamento:', error);
+        this.showNotification('Erro ao salvar medicamento. Verifique o console.', 'error');
+    }
+}
+            async excluirMedicamento(id) {
+    if (!confirm('Tem certeza que deseja excluir este medicamento?')) return;
+    
+    try {
+        const response = await fetch(`${API_BASE}/${id}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const resultado = await response.json();
+        
+        if (resultado.status === 'sucesso') {
+            this.showNotification('Medicamento excluído com sucesso!', 'success');
+            
+            // ATUALIZA A LISTA DE MEDICAMENTOS
+            await this.carregarMedicamentos();
+            
+            // ATUALIZA OS MEDICAMENTOS DE HOJE NA HORA
+            this.renderTodayMedications();
+            
+            // ATUALIZA O PROGRESSO
+            this.updateProgress();
+            
+        } else {
+            throw new Error(resultado.mensagem || 'Erro ao excluir medicamento');
+        }
+        
+    } catch (error) {
+        console.error('Erro ao excluir medicamento:', error);
+        this.showNotification('Erro ao excluir medicamento. Verifique o console.', 'error');
+    }
+}
+            renderCalendar() {
+                const grid = document.getElementById('calendarGrid');
+                if (!grid) {
+                    console.error('Elemento calendarGrid não encontrado!');
+                    return;
+                }
+                
+                console.log('Renderizando calendário...');
+                grid.innerHTML = '';
+
+                // Cabeçalho dos dias da semana
+                const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+                diasSemana.forEach(dia => {
+                    const header = document.createElement('div');
+                    header.className = 'calendar-day-header';
+                    header.textContent = dia;
+                    grid.appendChild(header);
+                });
+
+                // Configurações do mês atual
+                const primeiroDia = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
+                const ultimoDia = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 0);
+                const diasNoMes = ultimoDia.getDate();
+                const primeiroDiaSemana = primeiroDia.getDay();
+
+                // Dias do mês anterior
+                const ultimoDiaMesAnterior = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 0).getDate();
+                
+                // Gerar calendário (6 semanas × 7 dias = 42 células)
+                for (let i = 0; i < 42; i++) {
+                    const diaElement = document.createElement('div');
+                    diaElement.className = 'calendar-day';
+                    
+                    let diaNum, éMesAtual, éHoje;
+                    
+                    if (i < primeiroDiaSemana) {
+                        // Dias do mês anterior
+                        diaNum = ultimoDiaMesAnterior - primeiroDiaSemana + i + 1;
+                        éMesAtual = false;
+                    } else if (i >= primeiroDiaSemana && i < primeiroDiaSemana + diasNoMes) {
+                        // Dias do mês atual
+                        diaNum = i - primeiroDiaSemana + 1;
+                        éMesAtual = true;
+                    } else {
+                        // Dias do próximo mês
+                        diaNum = i - primeiroDiaSemana - diasNoMes + 1;
+                        éMesAtual = false;
+                    }
+
+                    diaElement.textContent = diaNum;
+
+                    // Verificar se é hoje
+                    const hoje = new Date();
+                    éHoje = éMesAtual && 
+                            diaNum === hoje.getDate() && 
+                            this.currentDate.getMonth() === hoje.getMonth() && 
+                            this.currentDate.getFullYear() === hoje.getFullYear();
+
+                    if (éHoje) {
+                        diaElement.classList.add('today');
+                    }
+
+                    // Verificar se há medicamentos neste dia
+                    if (éMesAtual) {
+                        const dataAtual = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), diaNum);
+                        const dataISO = dataAtual.toISOString().split('T')[0];
+                        
+                        const temMedicamentos = this.medicamentos.some(med => {
+                            if (med.ativo !== true) return false;
+                            
+                            const inicio = med.dataInicio;
+                            const fim = med.dataFim || '2099-12-31';
+                            
+                            return dataISO >= inicio && dataISO <= fim;
+                        });
+
+                        if (temMedicamentos) {
+                            diaElement.classList.add('has-medication');
+                            
+                            const dots = document.createElement('div');
+                            dots.className = 'med-dots';
+                            dots.innerHTML = '<div class="med-dot"></div><div class="med-dot"></div><div class="med-dot"></div>';
+                            diaElement.appendChild(dots);
+                        }
+                    }
+
+                    if (!éMesAtual) {
+                        diaElement.style.opacity = '0.3';
+                    }
+
+                    grid.appendChild(diaElement);
+                }
+
+                // Atualizar título do mês
+                const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                              'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+                const monthTitle = document.getElementById('currentMonth');
+                if (monthTitle) {
+                    monthTitle.textContent = `${meses[this.currentDate.getMonth()]} ${this.currentDate.getFullYear()}`;
+                }
+            }
+
+            renderMedications() {
+                const grid = document.getElementById('medicationsGrid');
+                if (!grid) {
+                    console.error('Elemento medicationsGrid não encontrado!');
+                    return;
+                }
+
+                console.log('Renderizando medicamentos...');
+                grid.innerHTML = '';
+
+                if (this.medicamentos.length === 0) {
+                    grid.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: var(--text-light);">
+                            <div style="font-size: 48px; margin-bottom: 20px;">💊</div>
+                            <h3>Nenhum medicamento cadastrado</h3>
+                            <p>Clique em "Adicionar Medicamento" para começar</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                this.medicamentos.forEach(med => {
+                    const card = document.createElement('div');
+                    card.className = 'med-card';
+                    card.innerHTML = `
+                        <div class="med-card-header">
+                            <h4>${med.nomeMedicamento}</h4>
+                            <span class="med-status-badge ${med.ativo ? 'active' : 'inactive'}">
+                                ${med.ativo ? 'Ativo' : 'Inativo'}
+                            </span>
+                        </div>
+                        <div class="med-card-body">
+                            <p><strong>Dosagem:</strong> ${med.dosagemValor} ${med.dosagemUnidade}</p>
+                            <p><strong>Frequência:</strong> ${med.frequenciaPorDia}x/dia</p>
+                            <p><strong>Horários:</strong> ${med.horariosPersonalizados || 'Não definido'}</p>
+                            <p><strong>Período:</strong> ${this.formatarData(med.dataInicio)} até ${med.dataFim ? this.formatarData(med.dataFim) : 'Indeterminado'}</p>
+                            ${med.observacoes ? `<p><strong>Observações:</strong> ${med.observacoes}</p>` : ''}
+                        </div>
+                        <div class="med-card-actions">
+                            <button onclick="app.editarMedicamento(${med.id})">✏️ Editar</button>
+                            <button onclick="app.toggleStatus(${med.id})">
+                                ${med.ativo ? '⏸️ Pausar' : '▶️ Ativar'}
+                            </button>
+                            <button onclick="app.excluirMedicamento(${med.id})" class="delete-btn">🗑️ Excluir</button>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
+
+            renderTodayMedications() {
+    const container = document.getElementById('todayMedications');
+    if (!container) {
+        console.error('Elemento todayMedications não encontrado!');
+        return;
+    }
+
+    const hoje = new Date().toISOString().split('T')[0];
+    
+    // FILTRA APENAS MEDICAMENTOS ATIVOS PARA HOJE
+    const medicamentosHoje = this.medicamentos.filter(med => 
+        med.ativo === true &&  // ← AQUI ESTÁ O FILTRO IMPORTANTE
+        med.dataInicio <= hoje && 
+        (!med.dataFim || med.dataFim >= hoje)
+    );
+
+    console.log('Medicamentos de hoje (ativos):', medicamentosHoje.length);
+    container.innerHTML = '';
+
+    if (medicamentosHoje.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; color: var(--text-light); padding: 20px;">
+                <div style="font-size: 32px; margin-bottom: 10px;">🎉</div>
+                <p>Nenhum medicamento para hoje!</p>
+                <small>Aproveite o descanso</small>
+            </div>
+        `;
+        return;
+    }
+
+    medicamentosHoje.forEach(med => {
+        const horarios = med.horariosPersonalizados ? med.horariosPersonalizados.split(',') : ['Horário não definido'];
+        
+        horarios.forEach(horario => {
+            const horarioTrim = horario.trim();
+            const statusSalvo = this.verificarStatusSalvo(med.id, horarioTrim);
+            
+            const item = document.createElement('div');
+            item.className = 'med-item';
+            item.innerHTML = `
+                <div class="med-info">
+                    <div class="med-name">${med.nomeMedicamento}</div>
+                    <div class="med-time">${horarioTrim} - ${med.dosagemValor} ${med.dosagemUnidade}</div>
+                    ${med.observacoes ? `<small style="color: var(--text-light);">${med.observacoes}</small>` : ''}
+                </div>
+                <div class="med-status ${statusSalvo ? 'completed' : ''}" 
+                     onclick="app.marcarComoTomado(this, ${med.id}, '${horarioTrim}')"></div>
+            `;
+            container.appendChild(item);
+        });
+    });
+}
+
+            marcarComoTomado(element, id, horario) {
+                const agoraTomado = !element.classList.contains('completed');
+                
+                // Atualiza visualmente primeiro (para resposta rápida)
+                element.classList.toggle('completed');
+                
+                // Salva no localStorage para persistir entre recarregamentos
+                this.salvarStatusTomado(id, horario, agoraTomado);
+                
+                const medicamento = this.medicamentos.find(med => med.id === id);
+                
+                // Atualiza o progresso IMEDIATAMENTE
+                this.updateProgress();
+                
+                if (agoraTomado) {
+                    this.showNotification(`${medicamento.nomeMedicamento} (${horario}) marcado como tomado! ✅`, 'success');
+                } else {
+                    this.showNotification(`${medicamento.nomeMedicamento} (${horario}) desmarcado`, 'warning');
+                }
+                
+                // Tenta salvar no backend (opcional)
+                this.tentarSalvarNoBackend(id, agoraTomado);
+            }
+
+            salvarStatusTomado(medicamentoId, horario, tomado) {
+                const hoje = new Date().toISOString().split('T')[0];
+                const chave = `tomado_${medicamentoId}_${horario}_${hoje}`;
+                
+                if (tomado) {
+                    localStorage.setItem(chave, 'true');
+                } else {
+                    localStorage.removeItem(chave);
+                }
+            }
+
+            verificarStatusSalvo(medicamentoId, horario) {
+                const hoje = new Date().toISOString().split('T')[0];
+                const chave = `tomado_${medicamentoId}_${horario}_${hoje}`;
+                return localStorage.getItem(chave) === 'true';
+            }
+
+            async tentarSalvarNoBackend(id, tomado) {
+                try {
+                    const response = await fetch(`${API_BASE}/${id}/tomado?tomado=${tomado}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const resultado = await response.json();
+                        console.log('Status salvo no banco:', resultado);
+                    }
+                } catch (error) {
+                    console.log('Status salvo apenas localmente (localStorage)');
+                }
+            }
+
+            updateProgress() {
+                // Calcula progresso baseado nos elementos marcados na tela
+                const elementosStatus = document.querySelectorAll('.med-status');
+                const total = elementosStatus.length;
+                const tomados = Array.from(elementosStatus).filter(el => el.classList.contains('completed')).length;
+                
+                const porcentagem = total > 0 ? Math.round((tomados / total) * 100) : 0;
+
+                // Atualiza a exibição
+                const progressText = document.getElementById('progressText');
+                const progressSubtext = document.getElementById('progressSubtext');
+                
+                if (progressText && progressSubtext) {
+                    progressText.textContent = `${porcentagem}%`;
+                    progressSubtext.textContent = `de ${total}`;
+
+                    // Animação do círculo de progresso
+                    const circle = document.getElementById('progressCircle');
+                    if (circle) {
+                        const circunferencia = 2 * Math.PI * 50;
+                        const offset = circunferencia - (porcentagem / 100) * circunferencia;
+                        
+                        // Animação suave
+                        circle.style.transition = 'stroke-dashoffset 0.5s ease-in-out';
+                        circle.style.strokeDashoffset = offset;
+                        
+                        // Muda a cor baseado no progresso
+                        if (porcentagem === 100) {
+                            circle.style.stroke = 'var(--success)';
+                        } else if (porcentagem >= 75) {
+                            circle.style.stroke = 'var(--success)';
+                        } else if (porcentagem >= 50) {
+                            circle.style.stroke = 'var(--warning)';
+                        } else {
+                            circle.style.stroke = 'var(--purple-accent)';
+                        }
+                    }
+                }
+            }
+
+            updateStatistics() {
+                const ativos = this.medicamentos.filter(med => med.ativo === true).length;
+                
+                const totalElement = document.getElementById('total-medicamentos');
+                const ativosElement = document.getElementById('medicamentos-ativos');
+                
+                if (totalElement) totalElement.textContent = this.medicamentos.length;
+                if (ativosElement) ativosElement.textContent = ativos;
+            }
+
+            abrirModal() {
+                this.editingId = null;
+                this.limparFormulario();
+                document.getElementById('modalTitle').textContent = 'Novo Medicamento';
+                document.getElementById('dataInicio').value = new Date().toISOString().split('T')[0];
+                document.getElementById('modal').classList.add('active');
+            }
+
+            fecharModal() {
+                document.getElementById('modal').classList.remove('active');
+                this.editingId = null;
+                this.limparFormulario();
+            }
+
+            limparFormulario() {
+                document.getElementById('medicamentoForm').reset();
+                document.getElementById('ativo').checked = true;
+            }
+
+            async editarMedicamento(id) {
+                const medicamento = this.medicamentos.find(med => med.id === id);
+                if (!medicamento) {
+                    this.showNotification('Medicamento não encontrado', 'error');
+                    return;
+                }
+
+                this.editingId = id;
+                
+                // Preencher formulário
+                document.getElementById('nomeMedicamento').value = medicamento.nomeMedicamento;
+                document.getElementById('dosagemValor').value = medicamento.dosagemValor;
+                document.getElementById('dosagemUnidade').value = medicamento.dosagemUnidade;
+                document.getElementById('frequenciaDia').value = medicamento.frequenciaPorDia;
+                document.getElementById('horariosPersonalizados').value = medicamento.horariosPersonalizados || '';
+                document.getElementById('dataInicio').value = medicamento.dataInicio;
+                document.getElementById('dataFim').value = medicamento.dataFim || '';
+                document.getElementById('observacoes').value = medicamento.observacoes || '';
+                document.getElementById('ativo').checked = medicamento.ativo === true;
+                
+                document.getElementById('modalTitle').textContent = 'Editar Medicamento';
+                document.getElementById('modal').classList.add('active');
+            }
+
+            async toggleStatus(id) {
+    const medicamento = this.medicamentos.find(med => med.id === id);
+    if (!medicamento) {
+        this.showNotification('Medicamento não encontrado', 'error');
+        return;
+    }
+
+    const novoStatus = !medicamento.ativo;
+    const dadosAtualizados = {
+        ...medicamento,
+        ativo: novoStatus
+    };
+    
+    try {
+        const response = await fetch(`${API_BASE}/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dadosAtualizados)
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const resultado = await response.json();
+        
+        if (resultado.status === 'sucesso') {
+            this.showNotification(`Medicamento ${novoStatus ? 'ativado' : 'pausado'} com sucesso!`, 'success');
+            
+            // ATUALIZA A LISTA DE MEDICAMENTOS
+            await this.carregarMedicamentos();
+            
+            // ATUALIZA OS MEDICAMENTOS DE HOJE NA HORA
+            this.renderTodayMedications();
+            
+            // ATUALIZA O PROGRESSO
+            this.updateProgress();
+            
+        } else {
+            throw new Error(resultado.mensagem || 'Erro ao alterar status');
+        }
+        
+    } catch (error) {
+        console.error('Erro ao alterar status:', error);
+        this.showNotification('Erro ao alterar status. Verifique o console.', 'error');
+    }
+}
+
+            showNotification(mensagem, tipo = 'success') {
+                const notification = document.getElementById('notification');
+                const messageEl = document.getElementById('notificationMessage');
+                
+                if (!notification || !messageEl) {
+                    console.error('Elementos de notificação não encontrados!');
+                    return;
+                }
+                
+                messageEl.textContent = mensagem;
+                notification.className = `notification ${tipo} show`;
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+
+            setupEventListeners() {
+                console.log('Configurando event listeners...');
+                
+                // Navegação entre abas
+                document.querySelectorAll('.nav-tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                        e.target.classList.add('active');
+                        
+                        const tabId = e.target.getAttribute('data-tab');
+                        this.switchTab(tabId);
+                    });
+                });
+
+                // Navegação do calendário
+                const prevMonthBtn = document.getElementById('prevMonth');
+                const nextMonthBtn = document.getElementById('nextMonth');
+                const todayBtn = document.getElementById('todayBtn');
+
+                if (prevMonthBtn) {
+                    prevMonthBtn.addEventListener('click', () => {
+                        this.currentDate.setMonth(this.currentDate.getMonth() - 1);
+                        this.renderCalendar();
+                    });
+                }
+
+                if (nextMonthBtn) {
+                    nextMonthBtn.addEventListener('click', () => {
+                        this.currentDate.setMonth(this.currentDate.getMonth() + 1);
+                        this.renderCalendar();
+                    });
+                }
+
+                if (todayBtn) {
+                    todayBtn.addEventListener('click', () => {
+                        this.currentDate = new Date();
+                        this.renderCalendar();
+                    });
+                }
+
+                // Fechar modal ao clicar fora
+                const modal = document.getElementById('modal');
+                if (modal) {
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            this.fecharModal();
+                        }
+                    });
+                }
+
+                // Submissão do formulário
+                const form = document.getElementById('medicamentoForm');
+                if (form) {
+                    form.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        this.salvarFormulario();
+                    });
+                }
+
+                // Tecla ESC para fechar modal
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        this.fecharModal();
+                    }
+                });
+            }
+
+            switchTab(tabId) {
+                this.currentTab = tabId;
+                
+                // Esconder todas as seções
+                document.querySelectorAll('.tab-content').forEach(section => {
+                    if (section) section.style.display = 'none';
+                });
+                
+                // Mostrar seção ativa
+                const activeSection = document.getElementById(`${tabId}Section`);
+                if (activeSection) {
+                    activeSection.style.display = 'block';
+                }
+                
+                // Renderizar conteúdo específico da aba
+                if (tabId === 'medications') {
+                    this.renderMedications();
+                } else if (tabId === 'calendar') {
+                    this.renderCalendar();
+                }
+
+                this.showNotification(`Aba ${this.getTabName(tabId)} aberta`, 'success');
+            }
+
+            getTabName(tabId) {
+                const names = {
+                    'calendar': 'Calendário',
+                    'medications': 'Medicamentos'
+                };
+                return names[tabId] || tabId;
+            }
+
+            salvarFormulario() {
+                const formData = {
+                    nomeMedicamento: document.getElementById('nomeMedicamento').value.trim(),
+                    dosagemValor: parseFloat(document.getElementById('dosagemValor').value),
+                    dosagemUnidade: document.getElementById('dosagemUnidade').value,
+                    frequenciaPorDia: parseInt(document.getElementById('frequenciaDia').value),
+                    horariosPersonalizados: document.getElementById('horariosPersonalizados').value.trim(),
+                    dataInicio: document.getElementById('dataInicio').value,
+                    dataFim: document.getElementById('dataFim').value || null,
+                    observacoes: document.getElementById('observacoes').value.trim() || null,
+                    ativo: document.getElementById('ativo').checked
+                };
+
+                // Validação básica
+                if (!formData.nomeMedicamento) {
+                    this.showNotification('Nome do medicamento é obrigatório', 'error');
+                    return;
+                }
+
+                if (!formData.dosagemValor || formData.dosagemValor <= 0) {
+                    this.showNotification('Dosagem deve ser maior que zero', 'error');
+                    return;
+                }
+
+                if (!formData.frequenciaPorDia || formData.frequenciaPorDia <= 0) {
+                    this.showNotification('Frequência deve ser maior que zero', 'error');
+                    return;
+                }
+
+                if (!formData.dataInicio) {
+                    this.showNotification('Data de início é obrigatória', 'error');
+                    return;
+                }
+
+                this.salvarMedicamento(formData);
+            }
+
+            formatarData(dataString) {
+                if (!dataString) return '-';
+                const data = new Date(dataString + 'T00:00:00');
+                return data.toLocaleDateString('pt-BR');
+            }
+        }
+
+        // Inicializar aplicação quando o DOM estiver carregado
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM carregado, iniciando aplicação...');
+            window.app = new MedCareApp();
+        });
+
+        // Handler para erros
+        window.addEventListener('error', function(e) {
+            console.error('Erro global:', e.error);
+        });
+    </script>
+</body>
+</html>
