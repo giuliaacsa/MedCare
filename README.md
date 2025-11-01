@@ -88,3 +88,9 @@ www.linkedin.com/in/giulia-acsa-dos-santos-muniz-b5bb13267
 ## ⚙️ Observação
 
 Pode ser necessário a instalação das extensões do SpringBoot e Maven!
+
+- Maven for Java
+- Spring Boot Dashboard
+- Spring Boot Extension Pack
+- Spring Boot Tools
+- Spring Initializr Java Support
