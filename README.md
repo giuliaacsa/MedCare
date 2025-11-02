@@ -72,7 +72,7 @@ Durante o desenvolvimento deste projeto, pude aprimorar habilidades de:
 
   * Organização de dados e modelagem de tabelas para controle de medicamentos
 
-  * Implementação de CRUD completo e relatórios automáticos
+  * Implementação de CRUD completo
 
   * Aplicação prática de autonomia e resolução de problemas reais
 
